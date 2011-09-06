@@ -16,7 +16,7 @@ For example, take this file:
     >
     > so cool.
 
-and run this command `readmd.py -w 80 file.md` to output this text:
+and convert it with this command `readmd.py -w 80 file.md` to:
 
     A markdown file
     ===============
