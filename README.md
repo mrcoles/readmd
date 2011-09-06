@@ -1,32 +1,69 @@
-Readable Markdown in the Terminal
-=================================
+Make Markdown Easier to Read as Plaintext
+=========================================
 
-### Usage
+For example, take this file:
 
-python readmd.py [-w size] [file ...]
+    A markdown file
+    ===
 
-Pass in a markdown file or multiple markdown files to be converted into pretty-printed markdown and sent to STDOUT. The output will be able to generate the same HTML output as the original markdown file, but it gains the ability of being more readable as plain-text.
+    1. This file is awesome
+    1. It has contents
+    1. Lorem ipsum dolor sit amet, vestibulum nulla nunc, enim pellentesque tempor, pretium proin in ligula, ac in. Suspendisse praesent pellentesque dis mollis maecenas, mattis vehicula. Morbi vestibulum morbi. Proin et facilisis aliquam lectus lorem, rutrum phasellus, duis semper sodales venenatis diam ad, sodales wisi wisi eget. Lobortis nonummy, blandit lectus elit egestas, id ut nullam, parturient minus lobortis.
+    1. Integer ut nullam nonummy quam in, risus penatibus suspendisse, et per sodales sed libero vitae odio, pede quam, nibh sed per condimentum. Tincidunt massa dui. Nisl vitae, vulputate sit tempus. Praesent turpis interdum, eu sollicitudin odio cursus eleifend purus nam, porttitor ac pellentesque libero adipiscing rhoncus, ipsum pede urna. In torquent, volutpat nulla, ut nullam et in dolor praesent mollis, wisi adipiscing.
 
-If no files are given, `README.md` is used as the default.
+    > how cool?
+    >
+    >
+    > so cool.
 
-The width option (-w size) can be used to specify how many characters wide a line can be (-1 for infinitely wide). If the option is excluded, the output will default to fit the width of the current terminal.
+and run this command `readmd.py -w 80 file.md` to output this text:
+
+    A markdown file
+    ===============
+
+    1.  This file is awesome
+    2.  It has contents
+    3.  Lorem ipsum dolor sit amet, vestibulum nulla nunc, enim pellentesque tempor,
+        pretium proin in ligula, ac in. Suspendisse praesent pellentesque dis mollis
+        maecenas, mattis vehicula. Morbi vestibulum morbi. Proin et facilisis
+        aliquam lectus lorem, rutrum phasellus, duis semper sodales venenatis diam
+        ad, sodales wisi wisi eget. Lobortis nonummy, blandit lectus elit egestas,
+        id ut nullam, parturient minus lobortis.
+    4.  Integer ut nullam nonummy quam in, risus penatibus suspendisse, et per
+        sodales sed libero vitae odio, pede quam, nibh sed per condimentum.
+        Tincidunt massa dui. Nisl vitae, vulputate sit tempus. Praesent turpis
+        interdum, eu sollicitudin odio cursus eleifend purus nam, porttitor ac
+        pellentesque libero adipiscing rhoncus, ipsum pede urna. In torquent,
+        volutpat nulla, ut nullam et in dolor praesent mollis, wisi adipiscing.
+
+    > how cool?
+    >
+    > so cool.
+
+Furthermore, if you do not specify a width parameter, it will just default to
+the width of your current screen.
+
+### Details
+
+*   Usage: python readmd.py [-w size] [file ...]
+*   Defaults to width of current terminal if not width is specified
+*   Defaults to trying README.md if no file is specified
+*   Pretty-prints markdown that will generate the same markup as the original
+    markdown
+*   Handles all special elements in markdown (headers, lists, block quote, code
+    blocks, horizontal rules)
+*   Formats sub-elements, e.g., a list within a blockquote
+*   Converts numbers in ordered lists to properly ascend from one
+*   Idempotent
 
 ### Use Cases
 
 This script can be used to:
 
-* Easily read any markdown file in your terminal
-* Pretty-print your github README.md file for other peoples' pleasure
+*   Easily read any markdown file in your terminal
+*   Pretty-print your github README.md file for other peoples' pleasure
 
-### Features
-
-* Pretty-prints markdown that will generate the same markup as the original markdown
-* Handles all special elements in markdown (headers, lists, block quote, code blocks, horizontal rules)
-* Formats sub-elements, e.g., a list within a blockquote
-* Converts numbers in ordered lists to properly ascend from one
-* Idempotent
-
-### Examples
+### More Examples
 
 Read a README.md file from a github project in your terminal:
 
@@ -39,9 +76,9 @@ Convert your own readme into a pretty-printed one width of 80 characters:
 
 ---
 
-
 ### TODO
 
-- add tests
-- make infinite width mode syntax look less weird?
-- add a simple way to configure stylistic preferences (or even add support for new elements)?
+-   add tests
+-   make infinite width mode syntax look less weird?
+-   add a simple way to configure stylistic preferences (or even add support for
+    new elements)?
