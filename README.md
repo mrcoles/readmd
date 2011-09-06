@@ -43,11 +43,19 @@ and run this command `readmd.py -w 80 file.md` to output this text:
 Furthermore, if you do not specify a width parameter, it will just default to
 the width of your current screen.
 
+### Use Cases
+
+This script can be used to:
+
+*   Easily read any markdown file in your terminal
+*   Pretty-print your github README.md file for other peoples' pleasure
+
 ### Details
 
 *   Usage: python readmd.py [-w size] [file ...]
-*   Defaults to width of current terminal if not width is specified
 *   Defaults to trying README.md if no file is specified
+*   Defaults to width of current terminal if not width is specified
+*   Specify a width of -1 to have the script bypass text wrapping
 *   Pretty-prints markdown that will generate the same markup as the original
     markdown
 *   Handles all special elements in markdown (headers, lists, block quote, code
@@ -55,13 +63,6 @@ the width of your current screen.
 *   Formats sub-elements, e.g., a list within a blockquote
 *   Converts numbers in ordered lists to properly ascend from one
 *   Idempotent
-
-### Use Cases
-
-This script can be used to:
-
-*   Easily read any markdown file in your terminal
-*   Pretty-print your github README.md file for other peoples' pleasure
 
 ### More Examples
 
