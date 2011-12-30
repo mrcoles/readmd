@@ -97,6 +97,7 @@ def _groupify(f, width, indent=''):
             line_after=line_after,
             is_pre=state.get('type') == TYPE_CODE,
             )
+
         is_first_render and first_render.set_false()
         has_break.set_false()
         forced_break.set_false()
@@ -114,7 +115,7 @@ def _groupify(f, width, indent=''):
 
             # deal with empty line
             if not line.strip():
-                if not forced_break.is_true():
+                if not forced_break.is_true() and not first_render.is_true():
                     has_break.set_true()
 
             # deal with setext header
@@ -321,6 +322,9 @@ class BooleanClass(object):
     def is_true(self): return bool(self.condition)
     def set_true(self): self.condition = True
     def set_false(self): self.condition = False
+    def __unicode__(self): return unicode(str(self))
+    def __str__(self): return str(bool(self.condition))
+    def __repr__(self): return 'BooleanClass(%s)' % unicode(self)
 
 
 def _getTerminalSize():
