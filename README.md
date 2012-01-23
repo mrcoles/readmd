@@ -79,6 +79,7 @@ Convert your own readme into a pretty-printed one width of 80 characters:
 
 ### TODO
 
+-   Add reading from stdin
 -   make infinite width mode syntax look less weird?
 -   add a simple way to configure stylistic preferences (or even add support for
     new elements)?
