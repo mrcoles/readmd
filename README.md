@@ -68,7 +68,7 @@ This script can be used to:
 
 Read a README.md file from a github project in your terminal:
 
-    python readmd.py
+    python readmd.py | less
 
 Convert your own readme into a pretty-printed one width of 80 characters:
 
