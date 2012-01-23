@@ -79,7 +79,7 @@ Convert your own readme into a pretty-printed one width of 80 characters:
 
 ### TODO
 
--   add tests
 -   make infinite width mode syntax look less weird?
 -   add a simple way to configure stylistic preferences (or even add support for
     new elements)?
+-   figure out if hr's should expand or not
