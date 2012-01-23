@@ -10,6 +10,7 @@
 #
 
 import re
+import sys
 
 MIN_WIDTH = 10
 NUM_SPACES = 4
@@ -56,7 +57,7 @@ def _increment_ol_state(state, prev_state=None):
 
 ## The goods.
 
-def readmd(f, width=None):
+def readmd(f, width=None, out=None):
     '''
     Make a markdown file more readable for humans.
 
@@ -67,12 +68,15 @@ def readmd(f, width=None):
         dims = _getTerminalSize()
         width, height = dims or (80, 24)
 
-    _groupify(f, width)
+    if out is None:
+        out = sys.stdout
+
+    _groupify(f, width, out)
 
 
-def _groupify(f, width, indent=''):
+def _groupify(f, width, out, indent=''):
     '''
-    groups lines into different elements and renders them to stdout
+    groups lines into different elements and renders them to out
     '''
     group = []                         # to group sections into different elements
     has_break = BooleanClass(False)    # to record line breaks
@@ -96,6 +100,7 @@ def _groupify(f, width, indent=''):
             prefix_rest=state.get('prefix_rest', ''),
             line_after=line_after,
             is_pre=state.get('type') == TYPE_CODE,
+            out=out,
             )
 
         is_first_render and first_render.set_false()
@@ -115,11 +120,11 @@ def _groupify(f, width, indent=''):
 
             # deal with empty line
             if not line.strip():
-                if not forced_break.is_true() and not first_render.is_true():
+                if not forced_break.is_true() and group:
                     has_break.set_true()
 
-            # deal with setext header
-            elif not has_break.is_true() and _setext_header.match(line):
+            # deal with setext header - make sure group exists, to prevent hrs from getting matched
+            elif not has_break.is_true() and _setext_header.match(line) and group:
                 m = _setext_header.match(line)
                 underline = m.groups()[0][0]
                 above_line = group.pop() if group else ''
@@ -158,7 +163,6 @@ def _groupify(f, width, indent=''):
                 # check for continuations of special types
                 was_continued = False
                 state_type = state.get('type')
-                is_indented_after_break = has_break.is_true() and _indented.search(line)
 
                 if state_type in (TYPE_UL, TYPE_OL, TYPE_BLOCK, TYPE_CODE):
 
@@ -177,9 +181,18 @@ def _groupify(f, width, indent=''):
                             line = (_ul_indent if ul_m else _ol_indent).sub('', line)
                             if TYPE_OL == state.get('type'): _increment_ol_state(state)
                             was_continued = True
-                        elif is_indented_after_break:
-                            group.append('\n')
+
+                        elif _indented.search(line):
+
+                            if has_break.is_true():
+                                group.append('\n')
+                                has_break.set_false()
+
+                            line = _indented.sub('', line) # remove indent for proper parsing
+
+                            if not line: has_break.set_true()
                             was_continued = True
+
 
                     # see if we can drop the blockquote symbol from the start of a
                     # continuation of a blockquoted region
@@ -232,6 +245,7 @@ def _groupify(f, width, indent=''):
                                     })
 
                         elif TYPE_HR == special_type:
+                            # this doesn't extend the line for now...
                             state['character'] = match.groups()[0]
                             has_break.set_true()
 
@@ -246,26 +260,29 @@ def _groupify(f, width, indent=''):
 
 
 
-def _render_group(group, width, indent, is_first_render, prefix_first, prefix_rest, line_after, is_pre):
+def _render_group(group, width, indent, is_first_render, prefix_first, prefix_rest, line_after, is_pre, out):
     '''
     Do the rendering of several lines that have been grouped together by
     a particular type of element, and recursively render sub-elements
     '''
     sections = []
     cur_section = ''
+    asserts = ((width, int), (indent, str), (is_first_render, bool), (MIN_WIDTH, int))
+    for i, (v,t) in enumerate(asserts):
+        assert isinstance(v,t), '%s: v %s is not type: %s' % (i, v, t)
     relative_width = width if width == -1 else max(MIN_WIDTH, width - len(indent) - max(len(prefix_first), len(prefix_rest)))
     first_indent = '' if is_first_render else indent
 
     if is_pre:
         for i, line in enumerate(group):
-            print '%s%s' % (first_indent if i == 0 else indent, line)
+            out.write('%s%s\n' % (first_indent if i == 0 else indent, line))
 
     else:
 
         # recursive call to allow rendering of special types within special types
         if prefix_first and prefix_rest:
-            print first_indent + (prefix_first[:-1] if prefix_first.endswith(' ') else prefix_first),
-            _groupify(iter(group), width, indent=indent + prefix_rest)
+            out.write(first_indent + (prefix_first[:-1] if prefix_first.endswith(' ') else prefix_first) + ' ')
+            _groupify(iter(group), width, out, indent=indent + prefix_rest)
 
         # render that!
         else:
@@ -284,12 +301,12 @@ def _render_group(group, width, indent, is_first_render, prefix_first, prefix_re
             for i, section in enumerate(sections):
                 fitted_text = _fit_text(section, relative_width, with_break=(i + 1 < num_sections))
                 for j, line in enumerate(fitted_text):
-                    print '%s%s%s' % (first_indent if 0 == i == j else indent,
-                                      prefix_first if 0 == i == j else prefix_rest,
-                                      line)
+                    out.write('%s%s%s\n' % (first_indent if 0 == i == j else indent,
+                                               prefix_first if 0 == i == j else prefix_rest,
+                                               line))
 
     if line_after:
-        print _end_space.sub('', indent)
+        out.write(_end_space.sub('', indent) + '\n')
 
 
 def _fit_text(section, width, with_break=False):
@@ -368,12 +385,11 @@ The width option (-w size) can be used to specify how many characters wide a lin
 
 if __name__ == '__main__':
     #TODO - support piping from stdin?
-    from sys import argv
 
-    args = argv[1:]
+    args = sys.argv[1:]
 
     if '--help' in args or '-h' in args:
-        print USAGE
+        sys.stderr.write(USAGE)
 
     else:
         paths, was_width, width = [], False, None
