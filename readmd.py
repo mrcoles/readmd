@@ -90,7 +90,7 @@ def _groupify(f, width, out, indent=''):
 
     # helper function to pass the right arguments into _render_group
     def _do_render_group(line_after=True):
-        is_first_render = first_render.is_true()
+        is_first_render = first_render
         _render_group(
             group,
             width,
@@ -120,11 +120,11 @@ def _groupify(f, width, out, indent=''):
 
             # deal with empty line
             if not line.strip():
-                if not forced_break.is_true() and group:
+                if not forced_break and group:
                     has_break.set_true()
 
             # deal with setext header - make sure group exists, to prevent hrs from getting matched
-            elif not has_break.is_true() and _setext_header.match(line) and group:
+            elif not has_break and _setext_header.match(line) and group:
                 m = _setext_header.match(line)
                 underline = m.groups()[0][0]
                 above_line = group.pop() if group else ''
@@ -176,7 +176,7 @@ def _groupify(f, width, out, indent=''):
                         ul_m = _ul_indent.search(line)
                         if ul_m or _ol_indent.search(line):
                             #TODO - maybe remember if first had break or not and do rest consistently?
-                            _do_render_group(line_after=has_break.is_true())
+                            _do_render_group(line_after=has_break)
 
                             line = (_ul_indent if ul_m else _ol_indent).sub('', line)
                             if TYPE_OL == state.get('type'): _increment_ol_state(state)
@@ -184,7 +184,7 @@ def _groupify(f, width, out, indent=''):
 
                         elif _indented.search(line):
 
-                            if has_break.is_true():
+                            if has_break:
                                 group.append('\n')
                                 has_break.set_false()
 
@@ -198,7 +198,7 @@ def _groupify(f, width, out, indent=''):
                     # continuation of a blockquoted region
                     elif TYPE_BLOCK == state_type:
                         if _blockquote.search(line):
-                            if has_break.is_true():
+                            if has_break:
                                 group.append('\n')
                                 has_break.set_false()
                             line = _blockquote.sub('', line)
@@ -207,7 +207,7 @@ def _groupify(f, width, out, indent=''):
 
 
                 # non-empty line after a break - group it!
-                if not was_continued and has_break.is_true():
+                if not was_continued and has_break:
                     if group: _do_render_group()
 
                 group.append(line)
@@ -267,9 +267,6 @@ def _render_group(group, width, indent, is_first_render, prefix_first, prefix_re
     '''
     sections = []
     cur_section = ''
-    asserts = ((width, int), (indent, str), (is_first_render, bool), (MIN_WIDTH, int))
-    for i, (v,t) in enumerate(asserts):
-        assert isinstance(v,t), '%s: v %s is not type: %s' % (i, v, t)
     relative_width = width if width == -1 else max(MIN_WIDTH, width - len(indent) - max(len(prefix_first), len(prefix_rest)))
     first_indent = '' if is_first_render else indent
 
@@ -339,6 +336,8 @@ class BooleanClass(object):
     def is_true(self): return bool(self.condition)
     def set_true(self): self.condition = True
     def set_false(self): self.condition = False
+    def __bool__(self): return self.is_true()
+    __nonzero__ = __bool__
     def __unicode__(self): return unicode(str(self))
     def __str__(self): return str(bool(self.condition))
     def __repr__(self): return 'BooleanClass(%s)' % unicode(self)
