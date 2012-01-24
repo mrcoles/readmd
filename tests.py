@@ -1,5 +1,6 @@
 import unittest
 import os
+import re
 try: import cStringIO as StringIO
 except: import StringIO
 
@@ -13,13 +14,8 @@ def _markup(text, width=None):
     readmd.readmd(f, width, out)
     return out.getvalue()
 
-
-class TestReadMd(unittest.TestCase):
-
-    def setUp(self): pass
-    def tearDown(self): pass
-
-    def test_ul(self):
+class SampleTestsMetaclass(type):
+    def __new__(cls, name, bases, attrs):
         samples_dir = os.path.join(os.path.realpath(os.path.dirname(__file__)), 'sample-tests')
 
         # get all the test file names
@@ -29,23 +25,32 @@ class TestReadMd(unittest.TestCase):
             if name.endswith('.sample') or name.endswith('.desired'):
                 test_file_names.add('.'.join(name.split('.')[:-1]))
 
+        # test logic function closure
+        def get_fn(path):
+            def fn(self):
+                path = os.path.join(samples_dir, test_file_name)
+                sample = open(path + '.sample')
+                desired = open(path + '.desired') #TODO - IOError?
+                sample_data = sample.read()
+                desired_data = desired.read()
+                sample.close()
+                desired.close()
+                self.assertEqual(_markup(sample_data), desired_data)
+            return fn
+
         # run test on all test files
+        _r_file_fn = re.compile('^[A-z][A-z0-9_\-]*$')
         for test_file_name in test_file_names:
-            path = os.path.join('sample-tests', test_file_name)
+            if _r_file_fn.match(test_file_name):
+                attrs['test_%s' % test_file_name] = get_fn(test_file_name)
 
-            sample = open(path + '.sample')
-            desired = open(path + '.desired') #TODO - do something if IOError?
+        return super(SampleTestsMetaclass, cls).__new__(cls, name, bases, attrs)
 
-            sample_data = sample.read()
-            desired_data = desired.read()
 
-            sample.close()
-            desired.close()
-
-            self.assertEqual(_markup(sample_data), desired_data)
-
-    # def test_ol(self):
-    #     self.assertTrue(False)
+class TestReadMd(unittest.TestCase):
+    __metaclass__ = SampleTestsMetaclass
+    def setUp(self): pass
+    def tearDown(self): pass
 
 
 if __name__ == '__main__':
