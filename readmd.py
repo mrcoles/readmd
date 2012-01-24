@@ -331,7 +331,6 @@ def _fit_text(section, width, with_break=False):
 
 class BooleanClass(object):
     '''a mutable class that represents a boolean value'''
-    #TODO - figure out how to make mutable conditionals "just work" elegantly
     def __init__(self, condition): self.condition = condition
     def is_true(self): return bool(self.condition)
     def set_true(self): self.condition = True
@@ -373,44 +372,49 @@ def _getTerminalSize():
 
 
 USAGE = '''
-Usage: python readmd.py [-w size] [file ...]
+Usage: python readmd.py [-w=size] [input_file [output_file]]
 
-Pass in a markdown file or multiple markdown files to be converted into pretty-printed markdown and sent to STDOUT. The output will be able to generate the same HTML output as the original markdown file, but it gains the ability of being more readable as plain-text.
+Pass in a markdown file be converted into pretty-printed markdown and written to `output_file` (or defaults to STDOUT). The output will be able to generate the same HTML output as the original markdown file, but it gains the ability of being more readable as plain-text.
 
-If no files are given, `README.md` is used as the default.
+If no files are given, `README.md` is used as the default. If "-" is passed in for `input_file`, then STDIN is used.
 
-The width option (-w size) can be used to specify how many characters wide a line can be (-1 for infinitely wide). If the option is excluded, the output will default to fit the width of the current terminal.
+The width option (-w=size) can be used to specify how many characters wide a line can be (-1 for infinitely wide). If the option is excluded, the output will default to fit the width of the current terminal (or 80 if it is not available).
 '''
 
 if __name__ == '__main__':
-    #TODO - support piping from stdin?
+    _r_arg = re.compile('^--?([a-z][0-9a-z-]*)(?:=([^\s]+))?$', re.IGNORECASE)
 
     args = sys.argv[1:]
+    paths = []
+    width = None
 
-    if '--help' in args or '-h' in args:
-        sys.stderr.write(USAGE)
+    for arg in args:
+        m = _r_arg.match(arg)
 
-    else:
-        paths, was_width, width = [], False, None
-
-        for arg in args:
-            if was_width:
-                width = int(arg)
+        if not m:
+            paths.append(arg)
+        else:
+            arg = m.groups()[0]
+            if arg in ('w', 'width'):
+                width = int(m.groups()[1])
                 if width < MIN_WIDTH and width != -1:
                     raise Exception('You must give a width of at least %d' % MIN_WIDTH)
-            elif arg in ('-w', '--width'):
-                was_width = True
-                continue
+            elif arg in ('h', 'help'):
+                sys.stderr.write(USAGE)
+                sys.exit()
+
             else:
-                paths.append(arg)
-            was_width = False
+                raise Exception('Invalid argument: %s' % (arg,))
 
-        if not paths:
-            paths.append('README.md')
+    if not paths:
+        paths.append('README.md')
 
-        for path in paths:
-            f = open(path)
-            try:
-                readmd(f, width=width)
-            finally:
-                f.close()
+    f = sys.stdin if paths[0] == '-' else open(paths[0])
+    use_stdout = len(paths) == 1
+    out = sys.stdout if use_stdout else open(paths[1], 'w')
+
+    try:
+        readmd(f, width=width, out=out)
+    finally:
+        f.close()
+        if not use_stdout: out.close()

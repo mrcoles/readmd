@@ -72,15 +72,13 @@ Read a README.md file from a github project in your terminal:
 
 Convert your own readme into a pretty-printed one width of 80 characters:
 
-    python readmd.py -w 80 README.md > README.md.new
+    python readmd.py -w=80 README.md README.md.new
     mv README.md{.new,}
 
 ---
 
 ### TODO
 
--   Add reading from stdin
--   make infinite width mode syntax look less weird?
 -   add a simple way to configure stylistic preferences (or even add support for
     new elements)?
 -   figure out if hr's should expand or not
