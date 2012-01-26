@@ -1,0 +1,43 @@
+#!/usr/bin/env python
+
+import readmd
+import re
+import sys
+
+if __name__ == '__main__':
+    _r_arg = re.compile('^--?([a-z][0-9a-z-]*)(?:=([^\s]+))?$', re.IGNORECASE)
+
+    args = sys.argv[1:]
+    paths = []
+    width = None
+
+    for arg in args:
+        m = _r_arg.match(arg)
+
+        if not m:
+            paths.append(arg)
+        else:
+            arg = m.groups()[0]
+            if arg in ('w', 'width'):
+                width = int(m.groups()[1])
+                if width < MIN_WIDTH and width != -1:
+                    raise Exception('You must give a width of at least %d' % MIN_WIDTH)
+            elif arg in ('h', 'help'):
+                sys.stderr.write(USAGE)
+                sys.exit()
+
+            else:
+                raise Exception('Invalid argument: %s' % (arg,))
+
+    if not paths:
+        paths.append('README.md')
+
+    f = sys.stdin if paths[0] == '-' else open(paths[0])
+    use_stdout = len(paths) == 1
+    out = sys.stdout if use_stdout else open(paths[1], 'w')
+
+    try:
+        readmd.readmd(f, width=width, out=out)
+    finally:
+        f.close()
+        if not use_stdout: out.close()
