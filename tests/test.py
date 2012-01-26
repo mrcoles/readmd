@@ -6,7 +6,6 @@ except: import StringIO
 
 import readmd
 
-
 def _markup(text, width=None):
     f = StringIO.StringIO(text)
     out = StringIO.StringIO()
@@ -16,7 +15,7 @@ def _markup(text, width=None):
 
 class SampleTestsMetaclass(type):
     def __new__(cls, name, bases, attrs):
-        samples_dir = os.path.join(os.path.realpath(os.path.dirname(__file__)), 'sample-tests')
+        samples_dir = os.path.join(os.path.realpath(os.path.dirname(__file__)), 'files')
 
         # get all the test file names
         file_names = os.listdir(samples_dir)
@@ -42,7 +41,7 @@ class SampleTestsMetaclass(type):
         _r_file_fn = re.compile('^[A-z][A-z0-9_\-]*$')
         for test_file_name in test_file_names:
             if _r_file_fn.match(test_file_name):
-                attrs['test_%s' % test_file_name] = get_fn(test_file_name)
+                attrs['test_%s' % test_file_name.replace('-', '_')] = get_fn(test_file_name)
 
         return super(SampleTestsMetaclass, cls).__new__(cls, name, bases, attrs)
 
@@ -51,7 +50,6 @@ class TestReadMd(unittest.TestCase):
     __metaclass__ = SampleTestsMetaclass
     def setUp(self): pass
     def tearDown(self): pass
-
 
 if __name__ == '__main__':
     unittest.main()
