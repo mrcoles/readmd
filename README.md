@@ -50,20 +50,6 @@ This script can be used to:
 *   Easily read any markdown file in your terminal
 *   Pretty-print your github README.md file for other peoples' pleasure
 
-### Details
-
-*   Command-line Usage: readmd [-w=width] [input_file [output_file]]
-*   Defaults to trying README.md if no file is specified
-*   Defaults to width of current terminal if not width is specified
-*   Specify a width of -1 to have the script bypass text wrapping
-*   Pretty-prints markdown that will generate the same markup as the original
-    markdown
-*   Handles all special elements in markdown (headers, lists, block quote, code
-    blocks, horizontal rules)
-*   Formats sub-elements, e.g., a list within a blockquote
-*   Converts numbers in ordered lists to properly ascend from one
-*   Idempotent
-
 ### Command-line Usage
 
 Read a README.md file from a github project (in your current directory) in your
@@ -79,6 +65,20 @@ Convert your own readme into a pretty-printed one width of 80 characters:
 Read something from standard in and save it as a file:
 
     cat some-file.md | readmd - some-pretty-file.md
+
+### Details
+
+*   Command-line Usage: readmd [-w=width] [input_file [output_file]]
+*   Defaults to trying README.md if no file is specified
+*   Defaults to width of current terminal if not width is specified
+*   Specify a width of -1 to have the script bypass text wrapping
+*   Pretty-prints markdown that will generate the same markup as the original
+    markdown
+*   Handles all special elements in markdown (headers, lists, block quote, code
+    blocks, horizontal rules)
+*   Formats sub-elements, e.g., a list within a blockquote
+*   Converts numbers in ordered lists to properly ascend from one
+*   Idempotent
 
 ---
 
