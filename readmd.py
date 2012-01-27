@@ -10,6 +10,9 @@
 import re
 import sys
 
+try: import cStringIO as StringIO
+except: import StringIO
+
 MIN_WIDTH = 10
 NUM_SPACES = 4
 SPACES = ' ' * NUM_SPACES
@@ -59,17 +62,23 @@ def readmd(f, width=None, out=None):
     '''
     Make a markdown file more readable for humans.
 
-    f - any iterator that supports .next() and StopIteration
+    f - filelike object that supports .next() and StopIteration
     width - (optional) width to use, otherwise uses terminal width
+    out - (optional) a file-like object to write output, otherwise output is returned
     '''
     if not width:
         dims = _getTerminalSize()
         width, height = dims or (80, 24)
 
-    if out is None:
-        out = sys.stdout
+    out_was_none = out is None
+
+    if out_was_none:
+        out = StringIO.StringIO()
 
     _groupify(f, width, out)
+
+    if out_was_none:
+        return out.getvalue()
 
 
 def _groupify(f, width, out, indent=''):
