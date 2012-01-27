@@ -80,6 +80,11 @@ Read something from standard in and save it as a file:
 *   Converts numbers in ordered lists to properly ascend from one
 *   Idempotent
 
+
+### Installation
+
+Install with `python setup.py install`
+
 ---
 
 ### TODO
