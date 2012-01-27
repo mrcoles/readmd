@@ -52,7 +52,7 @@ This script can be used to:
 
 ### Details
 
-*   Usage: python readmd.py [-w size] [file ...]
+*   Command-line Usage: readmd [-w=width] [input_file [output_file]]
 *   Defaults to trying README.md if no file is specified
 *   Defaults to width of current terminal if not width is specified
 *   Specify a width of -1 to have the script bypass text wrapping
