@@ -64,16 +64,21 @@ This script can be used to:
 *   Converts numbers in ordered lists to properly ascend from one
 *   Idempotent
 
-### More Examples
+### Command-line Usage
 
-Read a README.md file from a github project in your terminal:
+Read a README.md file from a github project (in your current directory) in your
+terminal:
 
-    python readmd.py | less
+    readmd | less
 
 Convert your own readme into a pretty-printed one width of 80 characters:
 
-    python readmd.py -w=80 README.md README.md.new
+    readmd -w=80 README.md README.md.new
     mv README.md{.new,}
+
+Read something from standard in and save it as a file:
+
+    cat some-file.md | readmd - some-pretty-file.md
 
 ---
 
