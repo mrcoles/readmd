@@ -4,6 +4,22 @@ import readmd
 import re
 import sys
 
+USAGE = '''
+Usage: python readmd.py [-w=size] [input_file [output_file]]
+
+Pass in a markdown file be converted into pretty-printed markdown and written to `output_file` (or defaults to STDOUT). The output will be able to generate the same HTML output as the original markdown file, but it gains the ability of being more readable as plain-text.
+
+If no files are given, `README.md` is used as the default. If "-" is passed in for `input_file`, then STDIN is used.
+
+The width option (-w=size) can be used to specify how many characters wide a line can be (-1 for infinitely wide). If the option is excluded, the output will default to fit the width of the current terminal (or 80 if it is not available).
+'''
+
+def _usage(error_msg):
+    if error_msg:
+        sys.stderr.write('[Error] %s\n' % (error_msg))
+    sys.stderr.write(USAGE)
+    sys.exit(1 if error_msg else 0)
+
 if __name__ == '__main__':
     _r_arg = re.compile('^--?([a-z][0-9a-z-]*)(?:=([^\s]+))?$', re.IGNORECASE)
 
@@ -20,19 +36,22 @@ if __name__ == '__main__':
             arg = m.groups()[0]
             if arg in ('w', 'width'):
                 width = int(m.groups()[1])
-                if width < MIN_WIDTH and width != -1:
-                    raise Exception('You must give a width of at least %d' % MIN_WIDTH)
+                if width < readmd.MIN_WIDTH and width != -1:
+                    _usage('You must give a width of at least %d characters.' % readmd.MIN_WIDTH)
             elif arg in ('h', 'help'):
-                sys.stderr.write(USAGE)
-                sys.exit()
+                _usage()
 
             else:
-                raise Exception('Invalid argument: %s' % (arg,))
+                _usage('Invalid argument: %s' % (arg,))
 
     if not paths:
         paths.append('README.md')
 
-    f = sys.stdin if paths[0] == '-' else open(paths[0])
+    try:
+        f = sys.stdin if paths[0] == '-' else open(paths[0])
+    except IOError, e:
+        if paths[0]: _usage('Cannot read input file (%s)' % (paths[0],))
+
     use_stdout = len(paths) == 1
     out = sys.stdout if use_stdout else open(paths[1], 'w')
 

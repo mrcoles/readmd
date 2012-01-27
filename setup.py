@@ -7,6 +7,6 @@ setup(
     author='Peter Coles',
     author_email='peter@mrcoles.com',
     url='https://github.com/mrcoles/readmd',
-    packages=['readmd'],
+    py_modules=['readmd'],
     scripts=['bin/readmd'],
     )
