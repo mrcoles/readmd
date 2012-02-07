@@ -93,6 +93,3 @@ Install with `python setup.py install`
     new elements)?
 -   figure out if hr's should expand or not
 -   figure out if sub-lists without extra line-break should be kept as sub-lists
--   figure out why nose hates my metaclass unittest--can still run as:
-
-        python -m tests.test
