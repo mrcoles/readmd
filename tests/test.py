@@ -35,6 +35,8 @@ class SampleTestsMetaclass(type):
                 sample.close()
                 desired.close()
                 self.assertEqual(_markup(sample_data), desired_data)
+            # For nose, test name must match /[Tt]est/
+            fn.__name__ = 'test_{0}'.format(path)
             return fn
 
         # run test on all test files
