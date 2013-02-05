@@ -12,7 +12,6 @@ Example - take this file:
     1. This file is awesome
     1. It has contents
     1. Lorem ipsum dolor sit amet, vestibulum nulla nunc, enim pellentesque tempor, pretium proin in ligula, ac in. Suspendisse praesent pellentesque dis mollis maecenas, mattis vehicula. Morbi vestibulum morbi. Proin et facilisis aliquam lectus lorem, rutrum phasellus, duis semper sodales venenatis diam ad, sodales wisi wisi eget. Lobortis nonummy, blandit lectus elit egestas, id ut nullam, parturient minus lobortis.
-    1. Integer ut nullam nonummy quam in, risus penatibus suspendisse, et per sodales sed libero vitae odio, pede quam, nibh sed per condimentum. Tincidunt massa dui. Nisl vitae, vulputate sit tempus. Praesent turpis interdum, eu sollicitudin odio cursus eleifend purus nam, porttitor ac pellentesque libero adipiscing rhoncus, ipsum pede urna. In torquent, volutpat nulla, ut nullam et in dolor praesent mollis, wisi adipiscing.
 
     > how cool?
     >
@@ -32,12 +31,6 @@ and convert it with this command `readmd file.md` to:
         aliquam lectus lorem, rutrum phasellus, duis semper sodales venenatis diam
         ad, sodales wisi wisi eget. Lobortis nonummy, blandit lectus elit egestas,
         id ut nullam, parturient minus lobortis.
-    4.  Integer ut nullam nonummy quam in, risus penatibus suspendisse, et per
-        sodales sed libero vitae odio, pede quam, nibh sed per condimentum.
-        Tincidunt massa dui. Nisl vitae, vulputate sit tempus. Praesent turpis
-        interdum, eu sollicitudin odio cursus eleifend purus nam, porttitor ac
-        pellentesque libero adipiscing rhoncus, ipsum pede urna. In torquent,
-        volutpat nulla, ut nullam et in dolor praesent mollis, wisi adipiscing.
 
     > how cool?
     >
