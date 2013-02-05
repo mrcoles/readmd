@@ -13,6 +13,7 @@ import sys
 try: import cStringIO as StringIO
 except: import StringIO
 
+DEFAULT_WIDTH = 80
 MIN_WIDTH = 10
 NUM_SPACES = 4
 SPACES = ' ' * NUM_SPACES
@@ -66,7 +67,7 @@ def readmd(f, width=None, out=None):
     width - (optional) width to use, otherwise uses terminal width
     out - (optional) a file-like object to write output, otherwise output is returned
     '''
-    if not width:
+    if not width or width < 0:
         dims = _getTerminalSize()
         width, height = dims or (80, 24)
 

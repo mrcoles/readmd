@@ -1,62 +1,31 @@
 #!/usr/bin/env python
 
 import readmd
-import re
 import sys
+import os
+import argparse
 
-USAGE = '''
-Usage: python readmd.py [-w=size] [input_file [output_file]]
-
-Pass in a markdown file be converted into pretty-printed markdown and written to `output_file` (or defaults to STDOUT). The output will be able to generate the same HTML output as the original markdown file, but it gains the ability of being more readable as plain-text.
-
-If no files are given, `README.md` is used as the default. If "-" is passed in for `input_file`, then STDIN is used.
-
-The width option (-w=size) can be used to specify how many characters wide a line can be (-1 for infinitely wide). If the option is excluded, the output will default to fit the width of the current terminal (or 80 if it is not available).
-'''
-
-def _usage(error_msg):
-    if error_msg:
-        sys.stderr.write('[Error] %s\n' % (error_msg))
-    sys.stderr.write(USAGE)
-    sys.exit(1 if error_msg else 0)
+DESCRIPTION = 'Convert a markdown file into pretty-printed markdown. The output will be able to generate the same HTML output as the original markdown file, but it gains the ability of being more readable as plain-text. If no files are specified, then it tries to read from `README.md` in the current directory.'
 
 if __name__ == '__main__':
-    _r_arg = re.compile('^--?([a-z][0-9a-z-]*)(?:=([^\s]+))?$', re.IGNORECASE)
+    parser = argparse.ArgumentParser(description=DESCRIPTION)
+    parser.add_argument('-w', '--width', type=int,
+                        default=readmd.DEFAULT_WIDTH,
+                        help=('characters per line for printing out text, '
+                              'make -1 to fit current screen width, '
+                              'defaults to %s' % (readmd.DEFAULT_WIDTH,)))
+    parser.add_argument('infile', nargs='?', type=argparse.FileType('r'),
+                        default=None)
+    parser.add_argument('outfile', nargs='?', type=argparse.FileType('w'),
+                        default=sys.stdout)
+    args = parser.parse_args()
 
-    args = sys.argv[1:]
-    paths = []
-    width = None
-
-    for arg in args:
-        m = _r_arg.match(arg)
-
-        if not m:
-            paths.append(arg)
+    if args.infile is None:
+        default_in = 'README.md'
+        if os.path.exists(default_in):
+            args.infile = open(default_in)
         else:
-            arg = m.groups()[0]
-            if arg in ('w', 'width'):
-                width = int(m.groups()[1])
-                if width < readmd.MIN_WIDTH and width != -1:
-                    _usage('You must give a width of at least %d characters.' % readmd.MIN_WIDTH)
-            elif arg in ('h', 'help'):
-                _usage()
+            parser.error('Unable to find a default %s file. '
+                         'Please specify a file to read.' % (default_in,))
 
-            else:
-                _usage('Invalid argument: %s' % (arg,))
-
-    if not paths:
-        paths.append('README.md')
-
-    try:
-        f = sys.stdin if paths[0] == '-' else open(paths[0])
-    except IOError, e:
-        if paths[0]: _usage('Cannot read input file (%s)' % (paths[0],))
-
-    use_stdout = len(paths) == 1
-    out = sys.stdout if use_stdout else open(paths[1], 'w')
-
-    try:
-        readmd.readmd(f, width=width, out=out)
-    finally:
-        f.close()
-        if not use_stdout: out.close()
+    readmd.readmd(args.infile, width=args.width, out=args.outfile)
