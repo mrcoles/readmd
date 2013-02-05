@@ -1,11 +1,15 @@
 #
 # readmd
 #
-# magical code to parse your markdown and make it more readable from the commandline
-# this *should* be lossless, i.e., the generated file should produce the same HTML as the original
+# magical code to parse your markdown and make it more readable from the
+# commandline this is lossless, i.e., the generated file should produce the
+# same HTML as the original
 #
-# potentially useful for reading someone's README.md file in the terminal -- or formatting your own.
+# potentially useful for reading someone's README.md file in the terminal --
+# or for formatting your own.
 #
+
+from __future__ import print_function, division, unicode_literals
 
 import re
 import sys
@@ -300,11 +304,13 @@ def _render_group(group, width, indent, is_first_render, prefix_first, prefix_re
                     cur_section = ''
 
                 if line == '\n':
-                    sections.append('') # add a whole other line for special case with line breaks
+                    # add a whole other line for special case with line breaks
+                    sections.append('')
 
             num_sections = len(sections)
             for i, section in enumerate(sections):
-                fitted_text = _fit_text(section, relative_width, with_break=(i + 1 < num_sections))
+                fitted_text = _fit_text(section, relative_width,
+                                        with_break=(i + 1 < num_sections))
                 for j, line in enumerate(fitted_text):
                     out.write('%s%s%s\n' % (first_indent if 0 == i == j else indent,
                                                prefix_first if 0 == i == j else prefix_rest,
@@ -338,7 +344,10 @@ def _fit_text(section, width, with_break=False):
 
 
 class BooleanClass(object):
-    '''a mutable class that represents a boolean value'''
+    '''A mutable class that represents a boolean value.
+    I can therefore manipulate them from inside a closure.
+
+    '''
     def __init__(self, condition): self.condition = condition
     def is_true(self): return bool(self.condition)
     def set_true(self): self.condition = True
@@ -352,14 +361,14 @@ class BooleanClass(object):
 
 def _getTerminalSize():
     '''
-    get the width of the terminal window, taken verbatim from:
+    get the width of the terminal window, verbatim from:
     http://stackoverflow.com/questions/566746/how-to-get-console-window-width-in-python
     '''
     def ioctl_GWINSZ(fd):
         try:
             import fcntl, termios, struct, os
             cr = struct.unpack('hh', fcntl.ioctl(fd, termios.TIOCGWINSZ,
-        '1234'))
+                                                 '1234'))
         except:
             return None
         return cr
@@ -377,3 +386,40 @@ def _getTerminalSize():
         except:
             cr = (25, 80)
     return int(cr[1]), int(cr[0])
+
+
+##
+
+def command_line_runner():
+    import argparse
+    import os
+    parser = argparse.ArgumentParser(description=(
+            'Convert a markdown file into pretty-printed markdown. '
+            'The output will be able to generate the same HTML output as '
+            'the original markdown file, but it gains the ability of being '
+            'more readable as plain-text. If no files are specified, then '
+            'it tries to read from `README.md` in the current directory.'
+            ))
+    parser.add_argument('-w', '--width', type=int, default=DEFAULT_WIDTH,
+                        help=('characters per line for printing out text, '
+                              'make -1 to fit current screen width, '
+                              'defaults to %s' % (DEFAULT_WIDTH,)))
+    parser.add_argument('infile', nargs='?', type=argparse.FileType('r'),
+                        default=None)
+    parser.add_argument('outfile', nargs='?', type=argparse.FileType('w'),
+                        default=sys.stdout)
+    args = parser.parse_args()
+
+    if args.infile is None:
+        default_in = 'README.md'
+        if os.path.exists(default_in):
+            args.infile = open(default_in)
+        else:
+            parser.error('Unable to find a default %s file. '
+                         'Please specify a file to read.' % (default_in,))
+
+    readmd(args.infile, width=args.width, out=args.outfile)
+
+
+if __name__ == '__main__':
+    command_line_runner()
