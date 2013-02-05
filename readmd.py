@@ -14,8 +14,11 @@ from __future__ import print_function, division, unicode_literals
 import re
 import sys
 
-try: import cStringIO as StringIO
-except: import StringIO
+try:
+    from io import StringIO
+except:
+    try: import cStringIO as StringIO
+    except: import StringIO
 
 DEFAULT_WIDTH = 80
 MIN_WIDTH = 10
@@ -121,155 +124,150 @@ def _groupify(f, width, out, indent=''):
         while len(group): group.pop()
 
     # main loop that goes through the file and parses it
-    while True:
-        try:
-            line = f.next()
-        except StopIteration, e:
-            if group: _do_render_group(line_after=False)
-            break
+    for line in f:
+        line = line.strip('\n\r').expandtabs(NUM_SPACES) # lawl - that's a function! replace('\t', SPACES)
+
+        # deal with empty line
+        if not line.strip():
+            if not forced_break and group:
+                has_break.set_true()
+
+        # deal with setext header - make sure group exists, to prevent hrs from getting matched
+        elif not has_break and _setext_header.match(line) and group:
+            m = _setext_header.match(line)
+            underline = m.groups()[0][0]
+            above_line = group.pop() if group else ''
+
+            if len(group) > 1:
+                group.pop()
+                _do_render_group()
+
+            prev_state, state = state, {} # clear state
+            group.append(above_line)
+            _do_render_group(line_after=False)
+
+            group.append(underline * len(above_line))
+            _do_render_group()
+            forced_break.set_true()
+
+        # deal with atx header
+        elif _atx_header.match(line):
+            m = _atx_header.match(line)
+            hashes = m.groups()[0].strip(' ')
+
+            if group:
+                _do_render_group()
+
+            prev_state, state = state, {} # clear state
+            group.append('%s %s' % (hashes, line.strip('#').strip(' ')))
+            _do_render_group()
+            forced_break.set_true()
+
+        # deal with non-empty line
         else:
-            line = line.strip('\n\r').expandtabs(NUM_SPACES) # lawl - that's a function! replace('\t', SPACES)
 
-            # deal with empty line
-            if not line.strip():
-                if not forced_break and group:
-                    has_break.set_true()
+            # clean up forced_break if we get to some content!
+            forced_break.set_false()
 
-            # deal with setext header - make sure group exists, to prevent hrs from getting matched
-            elif not has_break and _setext_header.match(line) and group:
-                m = _setext_header.match(line)
-                underline = m.groups()[0][0]
-                above_line = group.pop() if group else ''
+            # check for continuations of special types
+            was_continued = False
+            state_type = state.get('type')
 
-                if len(group) > 1:
-                    group.pop()
-                    _do_render_group()
+            if state_type in (TYPE_UL, TYPE_OL, TYPE_BLOCK, TYPE_CODE):
 
-                prev_state, state = state, {} # clear state
-                group.append(above_line)
-                _do_render_group(line_after=False)
+                # any non-empty non-code line following code will break immediately
+                if TYPE_CODE == state_type:
+                    if not _code.search(line):
+                        _do_render_group()
 
-                group.append(underline * len(above_line))
-                _do_render_group()
-                forced_break.set_true()
+                # continuing an ol with a ul or vice versa will convert to prior type
+                elif state_type in (TYPE_UL, TYPE_OL):
+                    ul_m = _ul_indent.search(line)
+                    if ul_m or _ol_indent.search(line):
+                        #TODO - maybe remember if first had break or not and do rest consistently?
+                        _do_render_group(line_after=has_break)
 
-            # deal with atx header
-            elif _atx_header.match(line):
-                m = _atx_header.match(line)
-                hashes = m.groups()[0].strip(' ')
+                        line = (_ul_indent if ul_m else _ol_indent).sub('', line)
+                        if TYPE_OL == state.get('type'): _increment_ol_state(state)
+                        was_continued = True
 
-                if group:
-                    _do_render_group()
+                    elif _indented.search(line):
 
-                prev_state, state = state, {} # clear state
-                group.append('%s %s' % (hashes, line.strip('#').strip(' ')))
-                _do_render_group()
-                forced_break.set_true()
+                        if has_break:
+                            group.append('\n')
+                            has_break.set_false()
 
-            # deal with non-empty line
-            else:
+                        line = _indented.sub('', line) # remove indent for proper parsing
 
-                # clean up forced_break if we get to some content!
-                forced_break.set_false()
-
-                # check for continuations of special types
-                was_continued = False
-                state_type = state.get('type')
-
-                if state_type in (TYPE_UL, TYPE_OL, TYPE_BLOCK, TYPE_CODE):
-
-                    # any non-empty non-code line following code will break immediately
-                    if TYPE_CODE == state_type:
-                        if not _code.search(line):
-                            _do_render_group()
-
-                    # continuing an ol with a ul or vice versa will convert to prior type
-                    elif state_type in (TYPE_UL, TYPE_OL):
-                        ul_m = _ul_indent.search(line)
-                        if ul_m or _ol_indent.search(line):
-                            #TODO - maybe remember if first had break or not and do rest consistently?
-                            _do_render_group(line_after=has_break)
-
-                            line = (_ul_indent if ul_m else _ol_indent).sub('', line)
-                            if TYPE_OL == state.get('type'): _increment_ol_state(state)
-                            was_continued = True
-
-                        elif _indented.search(line):
-
-                            if has_break:
-                                group.append('\n')
-                                has_break.set_false()
-
-                            line = _indented.sub('', line) # remove indent for proper parsing
-
-                            if not line: has_break.set_true()
-                            was_continued = True
+                        if not line: has_break.set_true()
+                        was_continued = True
 
 
-                    # see if we can drop the blockquote symbol from the start of a
-                    # continuation of a blockquoted region
-                    elif TYPE_BLOCK == state_type:
-                        if _blockquote.search(line):
-                            if has_break:
-                                group.append('\n')
-                                has_break.set_false()
-                            line = _blockquote.sub('', line)
-                            if not line: has_break.set_true()
-                            was_continued = True
+                # see if we can drop the blockquote symbol from the start of a
+                # continuation of a blockquoted region
+                elif TYPE_BLOCK == state_type:
+                    if _blockquote.search(line):
+                        if has_break:
+                            group.append('\n')
+                            has_break.set_false()
+                        line = _blockquote.sub('', line)
+                        if not line: has_break.set_true()
+                        was_continued = True
 
 
-                # non-empty line after a break - group it!
-                if not was_continued and has_break:
-                    if group: _do_render_group()
+            # non-empty line after a break - group it!
+            if not was_continued and has_break:
+                if group: _do_render_group()
 
-                group.append(line)
+            group.append(line)
 
 
-                # first non-empty line of a new group - identify it!
-                if not was_continued and len(group) == 1:
-                    match = None
-                    for special_type, regex in SPECIAL_TYPES:
-                        match = regex.search(line)
-                        if match:
-                            break
-
+            # first non-empty line of a new group - identify it!
+            if not was_continued and len(group) == 1:
+                match = None
+                for special_type, regex in SPECIAL_TYPES:
+                    match = regex.search(line)
                     if match:
-                        prev_state, state = state, {'type': special_type}
+                        break
 
-                        if TYPE_UL == special_type:
-                            group[-1] = _ul_indent.sub('', group[-1])
-                            bullet = match.groups()[0]
-                            state.update({
-                                    'prefix_first': '%s   ' % bullet,
-                                    'prefix_rest': SPACES,
-                                    })
+                if match:
+                    prev_state, state = state, {'type': special_type}
 
-                        elif TYPE_OL == special_type:
-                            group[-1] = _ol_indent.sub('', group[-1])
-                            _increment_ol_state(state, prev_state)
-                            state['prefix_rest'] = SPACES
+                    if TYPE_UL == special_type:
+                        group[-1] = _ul_indent.sub('', group[-1])
+                        bullet = match.groups()[0]
+                        state.update({
+                                'prefix_first': '%s   ' % bullet,
+                                'prefix_rest': SPACES,
+                                })
 
-                        elif TYPE_BLOCK == special_type:
-                            group[-1] = _blockquote.sub('', group[-1])
-                            state.update({
-                                    'prefix_first': '> ',
-                                    'prefix_rest': '> ',
-                                    })
+                    elif TYPE_OL == special_type:
+                        group[-1] = _ol_indent.sub('', group[-1])
+                        _increment_ol_state(state, prev_state)
+                        state['prefix_rest'] = SPACES
 
-                        elif TYPE_HR == special_type:
-                            # this doesn't extend the line for now...
-                            state['character'] = match.groups()[0]
-                            has_break.set_true()
+                    elif TYPE_BLOCK == special_type:
+                        group[-1] = _blockquote.sub('', group[-1])
+                        state.update({
+                                'prefix_first': '> ',
+                                'prefix_rest': '> ',
+                                })
 
-                        elif TYPE_CODE == special_type:
-                            state.update({
-                                    'prefix_first': SPACES,
-                                    'prefix_rest': SPACES,
-                                    })
+                    elif TYPE_HR == special_type:
+                        # this doesn't extend the line for now...
+                        state['character'] = match.groups()[0]
+                        has_break.set_true()
 
-                    else:
-                        prev_state, state = state, {}
+                    elif TYPE_CODE == special_type:
+                        state.update({
+                                'prefix_first': SPACES,
+                                'prefix_rest': SPACES,
+                                })
 
+                else:
+                    prev_state, state = state, {}
+
+    if group: _do_render_group(line_after=False)
 
 
 def _render_group(group, width, indent, is_first_render, prefix_first, prefix_rest, line_after, is_pre, out):
