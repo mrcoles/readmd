@@ -1,7 +1,10 @@
 Make Markdown Easier to Read as Plaintext
 =========================================
 
-For example, take this file:
+Install with `pip install readmd`
+
+
+Example - take this file:
 
     A markdown file
     ===
@@ -16,7 +19,7 @@ For example, take this file:
     >
     > so cool.
 
-and convert it with this command `readmd -w=80 file.md` to:
+and convert it with this command `readmd file.md` to:
 
     A markdown file
     ===============
@@ -57,9 +60,9 @@ terminal:
 
     readmd | less
 
-Convert your own readme into a pretty-printed one width of 80 characters:
+Convert your own readme into a pretty-printed one width of 60 characters:
 
-    readmd -w=80 README.md README.md.new
+    readmd --width 60 README.md README.md.new
     mv README.md{.new,}
 
 Read something from standard in and save it as a file:
@@ -68,10 +71,11 @@ Read something from standard in and save it as a file:
 
 ### Details
 
-*   Command-line Usage: readmd [-w=width] [input_file [output_file]]
+*   Command-line Usage: readmd [-w width] [input_file [output_file]]
 *   Defaults to trying README.md if no file is specified
-*   Defaults to width of current terminal if not width is specified
+*   Defaults to width of 80 characters if not specified
 *   Specify a width of -1 to have the script bypass text wrapping
+*   Specify a width of 0 to have the character width match the current console
 *   Pretty-prints markdown that will generate the same markup as the original
     markdown
 *   Handles all special elements in markdown (headers, lists, block quote, code
@@ -79,11 +83,6 @@ Read something from standard in and save it as a file:
 *   Formats sub-elements, e.g., a list within a blockquote
 *   Converts numbers in ordered lists to properly ascend from one
 *   Idempotent
-
-
-### Installation
-
-Install with `python setup.py install`
 
 ---
 
