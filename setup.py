@@ -2,7 +2,7 @@ from distutils.core import setup
 
 setup(
     name='readmd',
-    version='0.1.1',
+    version='0.1.2',
     description='Make markdown easier to read as plaintext',
     author='Peter Coles',
     author_email='peter@mrcoles.com',
