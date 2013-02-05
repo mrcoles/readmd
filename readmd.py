@@ -74,9 +74,12 @@ def readmd(f, width=None, out=None):
     width - (optional) width to use, otherwise uses terminal width
     out - (optional) a file-like object to write output, otherwise output is returned
     '''
-    if not width or width < 0:
-        dims = _getTerminalSize()
+    if not width:
+        dims = _get_terminal_size()
         width, height = dims or (80, 24)
+
+    if width < 0:
+        width = -1
 
     out_was_none = out is None
 
@@ -357,31 +360,33 @@ class BooleanClass(object):
     def __repr__(self): return 'BooleanClass(%s)' % unicode(self)
 
 
-def _getTerminalSize():
+def _get_terminal_size():
     '''
-    get the width of the terminal window, verbatim from:
+    get the width of the terminal window, from:
     http://stackoverflow.com/questions/566746/how-to-get-console-window-width-in-python
     '''
     def ioctl_GWINSZ(fd):
         try:
             import fcntl, termios, struct, os
-            cr = struct.unpack('hh', fcntl.ioctl(fd, termios.TIOCGWINSZ,
-                                                 '1234'))
-        except:
+            cr = struct.unpack('hh'.encode('utf8'),
+                               fcntl.ioctl(fd, termios.TIOCGWINSZ,
+                                           '1234'.encode('utf8')))
+        except Exception:
             return None
         return cr
+
     cr = ioctl_GWINSZ(0) or ioctl_GWINSZ(1) or ioctl_GWINSZ(2)
     if not cr:
         try:
             fd = os.open(os.ctermid(), os.O_RDONLY)
             cr = ioctl_GWINSZ(fd)
             os.close(fd)
-        except:
+        except Exception:
             pass
     if not cr:
         try:
             cr = (env['LINES'], env['COLUMNS'])
-        except:
+        except Exception:
             cr = (25, 80)
     return int(cr[1]), int(cr[0])
 
@@ -399,8 +404,9 @@ def command_line_runner():
             'it tries to read from `README.md` in the current directory.'
             ))
     parser.add_argument('-w', '--width', type=int, default=DEFAULT_WIDTH,
-                        help=('characters per line for printing out text, '
-                              'make -1 to fit current screen width, '
+                        help=('number of characters per line for text, '
+                              'use -1 for infinite width,'
+                              'use 0 to match the width of the current console,'
                               'defaults to %s' % (DEFAULT_WIDTH,)))
     parser.add_argument('infile', nargs='?', type=argparse.FileType('r'),
                         default=None)
